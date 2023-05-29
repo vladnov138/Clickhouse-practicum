@@ -1,0 +1,24 @@
+with cte_bad_acts
+as
+(
+    select id act_id from acts_status_links t1
+    join statuses t2 on t1.status_code = t2.code
+    where code = 4 group by id
+),
+cte_bad_acts_with_executors as
+(
+    select t1.act_id act_id, t3.id executor_id, t3.name executor_name
+    from cte_bad_acts t1
+    join acts t2 on t1.act_id = t2.id
+    join executors t3 on t2.executor_id = t3.id
+    group by t1.act_id, t3.id, t3.name
+),
+cte_acts_with_executors_count_acts as 
+(
+    select e.id id, count(a.id) acts_count 
+    from executors e 
+    join acts a on e.id = a.executor_id
+    full outer join cte_bad_acts_with_executors t1 on t1.executor_id = e.id
+    group by e.id
+)
+select * from cte_bad_acts_with_executors
